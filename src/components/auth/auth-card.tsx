@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import Logo from "@/components/ui/logo";
+import { login, signup } from "@/services/auth";
+import { useNavigate } from "react-router-dom";
 
 interface AuthCardProps {
   isLogin?: boolean;
@@ -13,39 +15,66 @@ interface AuthCardProps {
 
 const AuthCard = ({ isLogin = true }: AuthCardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    if (!isLogin && password !== confirmPassword) {
+    try {
+      if (!isLogin && password !== confirmPassword) {
+        toast({
+          title: "As senhas não coincidem",
+          description: "Por favor, verifique as senhas informadas",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (isLogin) {
+        // Login
+        await login({ email, password });
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Você será redirecionado para o painel",
+        });
+        navigate("/dashboard");
+      } else {
+        // Signup
+        await signup({ email, password });
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Você será redirecionado para assinar um plano",
+        });
+        navigate("/subscribe");
+      }
+    } catch (error: any) {
+      console.error("Erro de autenticação:", error);
+      
+      // Tratamento personalizado de erros
+      let errorMessage = "Ocorreu um erro durante a autenticação";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Credenciais inválidas. Verifique seu email e senha.";
+      } else if (error.message.includes("User already registered")) {
+        errorMessage = "Este email já está cadastrado. Tente fazer login.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Por favor, confirme seu email antes de fazer login.";
+      }
+      
       toast({
-        title: "As senhas não coincidem",
-        description: "Por favor, verifique as senhas informadas",
+        title: isLogin ? "Erro ao fazer login" : "Erro ao criar conta",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Mock authentication for demo
-    setTimeout(() => {
-      toast({
-        title: isLogin ? "Login realizado com sucesso!" : "Conta criada com sucesso!",
-        description: "Você será redirecionado para o painel",
-      });
-      setLoading(false);
-      // Simulate successful login/signup
-      if (isLogin) {
-        window.location.href = "/dashboard";
-      } else {
-        window.location.href = "/subscribe";
-      }
-    }, 1500);
   };
 
   return (

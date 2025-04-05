@@ -2,14 +2,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/logo";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { isAuthenticated, handleLogout, user } = useAuth();
   
-  // Mock auth status - this would come from your auth context
-  const isAuthenticated = window.location.pathname.includes("dashboard");
-
   return (
     <nav className="bg-white border-b py-4">
       <div className="container mx-auto px-4 flex justify-between items-center">
@@ -32,7 +31,15 @@ const Navbar = () => {
               <a href="/dashboard" className="text-gray-600 hover:text-lotofacil-purple transition-colors">
                 Meu Painel
               </a>
-              <Button variant="outline" className="border-lotofacil-purple text-lotofacil-purple hover:bg-lotofacil-purple hover:text-white">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User size={16} />
+                <span>{user?.email}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                className="border-lotofacil-purple text-lotofacil-purple hover:bg-lotofacil-purple hover:text-white"
+                onClick={() => handleLogout()}
+              >
                 Sair
               </Button>
             </>
@@ -82,7 +89,15 @@ const Navbar = () => {
               <a href="/dashboard" className="text-gray-600 hover:text-lotofacil-purple transition-colors py-2">
                 Meu Painel
               </a>
-              <Button variant="outline" className="border-lotofacil-purple text-lotofacil-purple hover:bg-lotofacil-purple hover:text-white w-full">
+              <div className="flex items-center gap-2 text-sm text-gray-600 py-2">
+                <User size={16} />
+                <span>{user?.email}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                className="border-lotofacil-purple text-lotofacil-purple hover:bg-lotofacil-purple hover:text-white w-full"
+                onClick={() => handleLogout()}
+              >
                 Sair
               </Button>
             </>
