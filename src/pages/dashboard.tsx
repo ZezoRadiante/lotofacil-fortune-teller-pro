@@ -6,14 +6,23 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navbar from "@/components/navbar";
 import NumberGrid from "@/components/lotofacil/number-grid";
-import StrategyCard, { Strategy } from "@/components/lotofacil/strategy-card";
+import StrategyCard from "@/components/lotofacil/strategy-card";
 import { strategies } from "@/data/strategies";
 import TicketCard from "@/components/lotofacil/ticket-card";
 import { generateGames } from "@/services/generator";
-import { fetchResults, LotofacilResult } from "@/data/results";
+import { LotofacilResult } from "@/data/results";
 import ResultsCard from "@/components/lotofacil/results-card";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import EstatisticasCard from "@/components/lotofacil/estatisticas-card";
+import { 
+  fetchResultsFromSupabase, 
+  fetchEstatisticas, 
+  initializeDatabase,
+  getNumerosMaisFrequentes,
+  getNumerosAusentes
+} from "@/services/lotofacil";
+import { useQuery } from "@tanstack/react-query";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -23,11 +32,47 @@ const Dashboard = () => {
   const [gameQuantity, setGameQuantity] = useState<number>(5);
   const [generatedGames, setGeneratedGames] = useState<number[][]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [results, setResults] = useState<LotofacilResult[]>([]);
-  const [isLoadingResults, setIsLoadingResults] = useState<boolean>(false);
   
   // Mock premium status
   const isPremium = true;
+
+  // Inicializar o banco de dados quando o componente montar
+  useEffect(() => {
+    initializeDatabase()
+      .then(success => {
+        if (success) {
+          console.log("Banco de dados inicializado com sucesso");
+        }
+      })
+      .catch(error => {
+        console.error("Erro ao inicializar banco de dados:", error);
+      });
+  }, []);
+
+  // Queries para buscar os dados
+  const { 
+    data: results = [], 
+    isLoading: isLoadingResults 
+  } = useQuery({
+    queryKey: ['lotofacil-resultados'],
+    queryFn: fetchResultsFromSupabase
+  });
+
+  const { 
+    data: numerosMaisFrequentes = [], 
+    isLoading: isLoadingFrequentes 
+  } = useQuery({
+    queryKey: ['lotofacil-frequentes'],
+    queryFn: () => getNumerosMaisFrequentes(10)
+  });
+
+  const { 
+    data: numerosAusentes = [], 
+    isLoading: isLoadingAusentes 
+  } = useQuery({
+    queryKey: ['lotofacil-ausentes'],
+    queryFn: () => getNumerosAusentes(5)
+  });
 
   const toggleNumber = (number: number) => {
     if (selectedNumbers.includes(number)) {
@@ -100,25 +145,6 @@ const Dashboard = () => {
     }, 2000);
   };
 
-  const loadResults = async () => {
-    setIsLoadingResults(true);
-    try {
-      const data = await fetchResults();
-      setResults(data);
-    } catch (error) {
-      toast({
-        title: "Erro ao carregar resultados",
-        description: "Não foi possível carregar os últimos resultados da Lotofácil",
-        variant: "destructive",
-      });
-    }
-    setIsLoadingResults(false);
-  };
-
-  useEffect(() => {
-    loadResults();
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -142,6 +168,7 @@ const Dashboard = () => {
               <TabsTrigger value="generator">Gerar Jogos</TabsTrigger>
               <TabsTrigger value="results">Jogos Gerados</TabsTrigger>
               <TabsTrigger value="lottery">Últimos Resultados</TabsTrigger>
+              <TabsTrigger value="estatisticas">Estatísticas</TabsTrigger>
             </TabsList>
             
             <TabsContent value="generator">
@@ -295,7 +322,7 @@ const Dashboard = () => {
                       Não foi possível carregar os resultados
                     </p>
                     <Button 
-                      onClick={loadResults}
+                      onClick={() => window.location.reload()}
                       className="mt-4"
                       variant="outline"
                     >
@@ -303,6 +330,54 @@ const Dashboard = () => {
                     </Button>
                   </div>
                 )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="estatisticas">
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Estatísticas da Lotofácil</h2>
+                
+                <div className="grid sm:grid-cols-2 gap-6 mb-6">
+                  <EstatisticasCard 
+                    title="Números Mais Frequentes" 
+                    numeros={numerosMaisFrequentes} 
+                    isLoading={isLoadingFrequentes}
+                  />
+                  <EstatisticasCard 
+                    title="Números Menos Frequentes" 
+                    numeros={numerosAusentes} 
+                    isLoading={isLoadingAusentes}
+                  />
+                </div>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Dicas para Seus Jogos</CardTitle>
+                    <CardDescription>
+                      Com base na análise dos últimos sorteios, sugerimos:
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      <li className="flex gap-2">
+                        <span className="text-lotofacil-purple font-bold">•</span>
+                        <span>Inclua pelo menos 60% dos números mais frequentes em suas apostas.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-lotofacil-purple font-bold">•</span>
+                        <span>Considere incluir alguns números menos frequentes que estão "devendo" aparecer.</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-lotofacil-purple font-bold">•</span>
+                        <span>Mantenha um bom equilíbrio entre números pares e ímpares (aproximadamente 7-8 de cada).</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-lotofacil-purple font-bold">•</span>
+                        <span>Distribua seus números em diferentes colunas e linhas do volante.</span>
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </Tabs>

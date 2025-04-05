@@ -9,16 +9,101 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      lotofacil_estatisticas: {
+        Row: {
+          frequencia: number
+          id: number
+          numero: number
+          ultimo_sorteio: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          frequencia: number
+          id?: number
+          numero: number
+          ultimo_sorteio?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          frequencia?: number
+          id?: number
+          numero?: number
+          ultimo_sorteio?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lotofacil_estatisticas_ultimo_sorteio_fkey"
+            columns: ["ultimo_sorteio"]
+            isOneToOne: false
+            referencedRelation: "lotofacil_resultados"
+            referencedColumns: ["concurso"]
+          },
+        ]
+      }
+      lotofacil_resultados: {
+        Row: {
+          concurso: number
+          created_at: string | null
+          data_sorteio: string
+          dezenas: number[]
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          concurso: number
+          created_at?: string | null
+          data_sorteio: string
+          dezenas: number[]
+          id?: number
+          updated_at?: string | null
+        }
+        Update: {
+          concurso?: number
+          created_at?: string | null
+          data_sorteio?: string
+          dezenas?: number[]
+          id?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "premium" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
