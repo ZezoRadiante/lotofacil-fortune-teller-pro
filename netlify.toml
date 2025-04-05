@@ -1,0 +1,11 @@
+
+# Configurações para deploy no Netlify
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Configuração para SPA - redireciona todas as requisições para o index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
