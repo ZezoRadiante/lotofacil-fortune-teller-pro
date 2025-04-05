@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { LotofacilResult } from "@/data/results";
+import { Database } from "@/integrations/supabase/types";
 
 // Interface para estatísticas da Lotofácil
 export interface LotofacilEstatistica {
