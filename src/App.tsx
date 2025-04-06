@@ -34,7 +34,7 @@ const App = () => (
             } />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/subscribe" element={
-              <ProtectedRoute>
+              <ProtectedRoute requireRole="user">
                 <Subscribe />
               </ProtectedRoute>
             } />
