@@ -11,9 +11,10 @@ import { useNavigate } from "react-router-dom";
 
 interface AuthCardProps {
   isLogin?: boolean;
+  redirectTo?: string;
 }
 
-const AuthCard = ({ isLogin = true }: AuthCardProps) => {
+const AuthCard = ({ isLogin = true, redirectTo = "/dashboard" }: AuthCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -41,9 +42,9 @@ const AuthCard = ({ isLogin = true }: AuthCardProps) => {
         await login({ email, password });
         toast({
           title: "Login realizado com sucesso!",
-          description: "Você será redirecionado para o painel",
+          description: "Você será redirecionado para o destino",
         });
-        navigate("/dashboard");
+        navigate(redirectTo);
       } else {
         // Signup
         await signup({ email, password });

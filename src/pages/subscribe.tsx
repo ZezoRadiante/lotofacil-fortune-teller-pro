@@ -11,7 +11,7 @@ import { pricingPlans } from "@/data/pricing";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Subscribe = () => {
   const { toast } = useToast();
@@ -19,45 +19,52 @@ const Subscribe = () => {
   const [selectedPlan, setSelectedPlan] = React.useState("pro");
   const [loading, setLoading] = React.useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Check if user is authenticated and redirect if not
   React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
       toast({
         title: "Login necessário",
         description: "Faça login para assinar um plano",
         variant: "destructive",
       });
-      navigate("/login", { replace: true });
+      navigate("/login", { state: { from: location.pathname } });
     }
-  }, [isLoading, isAuthenticated, navigate, toast]);
+  }, [isLoading, isAuthenticated, navigate, toast, location.pathname]);
 
   const handleSubscribe = async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !session) {
+      console.log("User not authenticated for subscription, redirecting to login");
       toast({
         title: "Login necessário",
         description: "Faça login para assinar um plano",
         variant: "destructive",
       });
-      navigate("/login");
+      navigate("/login", { state: { from: location.pathname } });
       return;
     }
 
     setLoading(true);
     
     try {
+      console.log("Creating checkout session for plan:", selectedPlan);
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { planId: selectedPlan }
       });
       
       if (error) {
+        console.error("Error invoking create-checkout function:", error);
         throw new Error(error.message);
       }
       
       // Redirect to Stripe Checkout
       if (data?.url) {
+        console.log("Redirecting to Stripe checkout:", data.url);
         window.location.href = data.url;
       } else {
+        console.error("No URL returned from checkout function");
         throw new Error("Não foi possível criar a sessão de pagamento");
       }
     } catch (error) {
