@@ -72,13 +72,16 @@ export const generateGames = (options: GeneratorOptions): number[][] => {
   const games: number[][] = [];
   const { quantity, strategies } = options;
   
+  // Limitar o número de jogos para garantir que usuários gratuitos não possam gerar muitos jogos
+  const actualQuantity = Math.min(quantity, 15);
+  
   // Aumentar o tamanho do jogo para 16 ou 17 números se a estratégia doublePrize estiver ativa
   const gameSize = strategies.doublePrize ? (Math.random() > 0.5 ? 16 : 17) : 15;
   
   let attempts = 0;
-  const maxAttempts = quantity * 100; // Limite para evitar loop infinito
+  const maxAttempts = actualQuantity * 100; // Limite para evitar loop infinito
   
-  while (games.length < quantity && attempts < maxAttempts) {
+  while (games.length < actualQuantity && attempts < maxAttempts) {
     attempts++;
     
     let game = generateTicket(gameSize);

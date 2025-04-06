@@ -23,6 +23,7 @@ import {
   getNumerosAusentes
 } from "@/services/lotofacil";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -33,8 +34,22 @@ const Dashboard = () => {
   const [generatedGames, setGeneratedGames] = useState<number[][]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   
-  // Mock premium status
-  const isPremium = true;
+  // Use auth context to get user role
+  const { userRole } = useAuth();
+  
+  // Check if user is premium or admin (subscribed)
+  const isSubscribed = userRole === 'premium' || userRole === 'admin';
+  
+  // Game limit based on subscription
+  const maxGames = isSubscribed ? 15 : 1;
+  const maxSelectedNumbers = isSubscribed ? 10 : 3;
+
+  // Adjust game quantity if needed when subscription status changes
+  useEffect(() => {
+    if (!isSubscribed && gameQuantity > maxGames) {
+      setGameQuantity(maxGames);
+    }
+  }, [isSubscribed, gameQuantity, maxGames]);
 
   // Inicializar o banco de dados quando o componente montar
   useEffect(() => {
@@ -78,12 +93,12 @@ const Dashboard = () => {
     if (selectedNumbers.includes(number)) {
       setSelectedNumbers(selectedNumbers.filter((n) => n !== number));
     } else {
-      if (selectedNumbers.length < 10) {
+      if (selectedNumbers.length < maxSelectedNumbers) {
         setSelectedNumbers([...selectedNumbers, number]);
       } else {
         toast({
           title: "Limite de números",
-          description: "Você pode selecionar no máximo 10 números fixos",
+          description: `Você pode selecionar no máximo ${maxSelectedNumbers} números fixos${!isSubscribed ? ' no plano gratuito' : ''}`,
           variant: "destructive",
         });
       }
@@ -94,11 +109,36 @@ const Dashboard = () => {
     if (activeStrategies.includes(strategyId)) {
       setActiveStrategies(activeStrategies.filter((id) => id !== strategyId));
     } else {
+      // Check if strategy is premium and user is not subscribed
+      const strategy = strategies.find(s => s.id === strategyId);
+      if (strategy?.premium && !isSubscribed) {
+        toast({
+          title: "Estratégia Premium",
+          description: "Faça upgrade para o plano pago para desbloquear esta estratégia",
+          variant: "destructive",
+        });
+        return;
+      }
       setActiveStrategies([...activeStrategies, strategyId]);
     }
   };
 
   const handleGenerateGames = () => {
+    // Check if user has reached daily limit for free plan
+    if (!isSubscribed) {
+      // In a real app, you'd check against a database record of today's generations
+      // For now, we'll just show a toast and allow one game
+      if (gameQuantity > maxGames) {
+        toast({
+          title: "Limite do plano gratuito",
+          description: "Você pode gerar apenas 1 jogo por dia no plano gratuito. Faça upgrade para gerar mais jogos.",
+          variant: "destructive",
+        });
+        setGameQuantity(maxGames);
+        return;
+      }
+    }
+    
     setIsGenerating(true);
     
     // Simulate server processing
@@ -159,7 +199,7 @@ const Dashboard = () => {
               </p>
             </div>
             <Badge className="bg-lotofacil-gradient">
-              {isPremium ? "Plano Fortune" : "Plano Básico"}
+              {isSubscribed ? "Plano Premium" : "Plano Básico"}
             </Badge>
           </div>
           
@@ -178,7 +218,8 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>Selecione Números Fixos (opcional)</CardTitle>
                       <CardDescription>
-                        Escolha até 10 números que devem aparecer em todos os jogos gerados
+                        Escolha até {maxSelectedNumbers} números que devem aparecer em todos os jogos gerados
+                        {!isSubscribed && ' (limite do plano gratuito)'}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -189,7 +230,7 @@ const Dashboard = () => {
                       
                       <div className="mt-4 flex justify-between items-center">
                         <div className="text-sm text-muted-foreground">
-                          {selectedNumbers.length} de 10 números selecionados
+                          {selectedNumbers.length} de {maxSelectedNumbers} números selecionados
                         </div>
                         {selectedNumbers.length > 0 && (
                           <Button 
@@ -208,14 +249,15 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>Quantidade de Jogos</CardTitle>
                       <CardDescription>
-                        Escolha quantos jogos deseja gerar (máximo: 15)
+                        Escolha quantos jogos deseja gerar (máximo: {maxGames})
+                        {!isSubscribed && ' no plano gratuito'}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
                         <Slider
-                          defaultValue={[5]}
-                          max={15}
+                          value={[gameQuantity]}
+                          max={maxGames}
                           min={1}
                           step={1}
                           onValueChange={(values) => setGameQuantity(values[0])}
@@ -234,6 +276,37 @@ const Dashboard = () => {
                   >
                     {isGenerating ? "Gerando jogos..." : "Gerar Jogos Inteligentes"}
                   </Button>
+
+                  {!isSubscribed && (
+                    <Card className="border-lotofacil-purple">
+                      <CardHeader className="bg-lotofacil-gradient text-white">
+                        <CardTitle>Desbloqueie Recursos Premium</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <p className="mb-4">Assine agora e desbloqueie:</p>
+                        <ul className="space-y-2 mb-4">
+                          <li className="flex items-center gap-2">
+                            <span className="text-lotofacil-purple font-bold">•</span>
+                            <span>Geração ilimitada de jogos</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-lotofacil-purple font-bold">•</span>
+                            <span>Todas as estratégias avançadas</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-lotofacil-purple font-bold">•</span>
+                            <span>Até 10 números fixos por jogo</span>
+                          </li>
+                        </ul>
+                        <Button 
+                          className="w-full bg-lotofacil-gradient hover:opacity-90"
+                          onClick={() => window.location.href = '/subscribe'}
+                        >
+                          Assinar Agora
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
                 
                 <div className="space-y-6">
@@ -252,7 +325,7 @@ const Dashboard = () => {
                             strategy={strategy}
                             selected={activeStrategies.includes(strategy.id)}
                             onToggle={() => toggleStrategy(strategy.id)}
-                            isPremium={isPremium}
+                            isPremium={isSubscribed}
                           />
                         ))}
                       </div>
