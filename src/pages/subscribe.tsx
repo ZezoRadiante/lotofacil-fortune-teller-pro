@@ -9,26 +9,42 @@ import { Check } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { pricingPlans } from "@/data/pricing";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Subscribe = () => {
   const { toast } = useToast();
+  const { session } = useAuth();
   const [selectedPlan, setSelectedPlan] = React.useState("pro");
   const [loading, setLoading] = React.useState(false);
 
-  const handleSubscribe = () => {
+  const handleSubscribe = async () => {
     setLoading(true);
     
-    // Simular processo de pagamento
-    setTimeout(() => {
-      toast({
-        title: "Assinatura realizada com sucesso!",
-        description: "Você será redirecionado para o painel em instantes",
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planId: selectedPlan }
       });
       
-      setTimeout(() => {
-        window.location.href = "/dashboard";
-      }, 1500);
-    }, 2000);
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      // Redirect to Stripe Checkout
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("Não foi possível criar a sessão de pagamento");
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast({
+        title: "Erro ao processar a assinatura",
+        description: error.message || "Tente novamente mais tarde",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
   };
 
   return (

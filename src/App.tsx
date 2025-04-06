@@ -10,6 +10,7 @@ import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Pricing from "./pages/pricing";
 import Subscribe from "./pages/subscribe";
+import PaymentSuccess from "./pages/payment-success";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/protected-route";
@@ -36,6 +37,11 @@ const App = () => (
             <Route path="/subscribe" element={
               <ProtectedRoute requireRole="user">
                 <Subscribe />
+              </ProtectedRoute>
+            } />
+            <Route path="/payment-success" element={
+              <ProtectedRoute>
+                <PaymentSuccess />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
