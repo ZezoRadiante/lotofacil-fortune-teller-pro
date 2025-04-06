@@ -11,14 +11,38 @@ import { pricingPlans } from "@/data/pricing";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Subscribe = () => {
   const { toast } = useToast();
-  const { session } = useAuth();
+  const { session, isAuthenticated, isLoading } = useAuth();
   const [selectedPlan, setSelectedPlan] = React.useState("pro");
   const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
+
+  // Check if user is authenticated and redirect if not
+  React.useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para assinar um plano",
+        variant: "destructive",
+      });
+      navigate("/login", { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate, toast]);
 
   const handleSubscribe = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Login necessário",
+        description: "Faça login para assinar um plano",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -46,6 +70,23 @@ const Subscribe = () => {
       setLoading(false);
     }
   };
+
+  // Show loading while authentication state is being checked
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-lotofacil-purple"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Only render the subscription page content if authenticated
+  if (!isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen flex flex-col">

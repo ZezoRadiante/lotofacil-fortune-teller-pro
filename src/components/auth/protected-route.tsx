@@ -14,7 +14,7 @@ const ProtectedRoute = ({
   requireAuth = true,
   requireRole
 }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, userRole, checkUserRole } = useAuth();
+  const { isAuthenticated, isLoading, userRole, checkUserRole, session } = useAuth();
   const [isCheckingRole, setIsCheckingRole] = useState(!!requireRole);
 
   // Verificar o papel do usuário se for necessário
@@ -38,7 +38,7 @@ const ProtectedRoute = ({
 
   // Se a rota requer autenticação e o usuário não está autenticado, redirecionar para o login
   if (requireAuth && !isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
   }
 
   // Se a rota requer um papel específico e o usuário não tem esse papel, redirecionar
