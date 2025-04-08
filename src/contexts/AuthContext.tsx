@@ -71,12 +71,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Setting up auth listener");
     const cleanup = setupAuthListener(setUser, setSession);
     
-    // Initial auth check needs to happen after the listener is set up
-    setTimeout(() => {
+    // Initial auth check happens in setupAuthListener
+    // Wait a bit to ensure auth state is fully loaded before removing loading state
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 1000);
     
-    return cleanup;
+    return () => {
+      cleanup();
+      clearTimeout(timer);
+    };
   }, []);
 
   // Verificar o papel do usuário sempre que o usuário mudar

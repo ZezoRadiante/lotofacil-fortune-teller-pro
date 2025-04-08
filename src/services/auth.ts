@@ -18,6 +18,10 @@ export const login = async ({ email, password }: LoginCredentials) => {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    options: {
+      // Garantir que a sessão seja persistida
+      persistSession: true
+    }
   });
 
   if (error) throw error;
@@ -29,6 +33,10 @@ export const signup = async ({ email, password }: SignupCredentials) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      // Garantir que a sessão seja persistida
+      persistSession: true
+    }
   });
 
   if (error) throw error;
@@ -74,6 +82,7 @@ export const setupAuthListener = (
 ) => {
   console.log("Setting up auth state listener");
   
+  // Configurar listener de eventos de autenticação
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (event, session) => {
       console.log("Auth state changed:", event);
