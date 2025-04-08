@@ -154,6 +154,7 @@ const Dashboard = () => {
       try {
         const options = {
           quantity: gameQuantity,
+          maxGames: maxGames, // Passando o limite máximo para o gerador
           strategies: {
             avoidPrevious: activeStrategies.includes("avoid-previous"),
             balanceOddEven: activeStrategies.includes("balance-odd-even"),
@@ -165,6 +166,17 @@ const Dashboard = () => {
         };
         
         const games = generateGames(options);
+        
+        // Verificar se há jogos gerados (poderia ser zero se o limite diário foi atingido)
+        if (games.length === 0) {
+          toast({
+            title: "Limite diário atingido",
+            description: "Você já atingiu seu limite diário de jogos gerados. Tente novamente amanhã ou faça upgrade do seu plano.",
+            variant: "destructive",
+          });
+          setIsGenerating(false);
+          return;
+        }
         
         if (selectedNumbers.length > 0) {
           for (let i = 0; i < games.length; i++) {

@@ -12,6 +12,7 @@ interface GeneratorOptions {
     primes: boolean;
     cycle: boolean;
   };
+  maxGames?: number; // Adicionado maxGames como opção para limitar jogos
 }
 
 // Gera um jogo aleatório com 15 números entre 1 e 25
@@ -70,10 +71,15 @@ const hasCycleNumbers = (ticket: number[]): boolean => {
 
 export const generateGames = (options: GeneratorOptions): number[][] => {
   const games: number[][] = [];
-  const { quantity, strategies } = options;
+  const { quantity, strategies, maxGames } = options;
   
-  // Limitar o número de jogos para garantir que usuários gratuitos não possam gerar muitos jogos
-  const actualQuantity = Math.min(quantity, 15);
+  // Aplicar o limite máximo de jogos com base no plano do usuário
+  const actualQuantity = Math.min(quantity, maxGames || 15);
+  
+  // Garantir que não exceda o limite definido no plano
+  if (quantity > actualQuantity) {
+    console.log(`Limite de jogos excedido. Solicitado: ${quantity}, Permitido: ${actualQuantity}`);
+  }
   
   // Aumentar o tamanho do jogo para 16 ou 17 números se a estratégia doublePrize estiver ativa
   const gameSize = strategies.doublePrize ? (Math.random() > 0.5 ? 16 : 17) : 15;
