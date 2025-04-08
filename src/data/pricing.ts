@@ -10,7 +10,7 @@ export interface PricingPlan {
     included: boolean;
   }[];
   popular?: boolean;
-  maxGamesPerDay?: number; // New property for max games per day
+  maxGamesPerDay?: number; // Property for max games per day
 }
 
 export const pricingPlans: PricingPlan[] = [
@@ -38,10 +38,10 @@ export const pricingPlans: PricingPlan[] = [
     description: "Para jogadores dedicados",
     maxGamesPerDay: 5,
     features: [
-      { name: "Geração de 5 jogos por dia", included: true }, // Updated to 5 games
+      { name: "Geração de 5 jogos por dia", included: true },
       { name: "Acesso aos últimos resultados", included: true },
       { name: "Estratégias básicas", included: true },
-      { name: "Geração ilimitada de jogos", included: false }, // Changed to false
+      { name: "Geração ilimitada de jogos", included: false },
       { name: "Estratégias avançadas", included: true },
       { name: "Estatísticas detalhadas", included: false },
     ],
@@ -55,10 +55,10 @@ export const pricingPlans: PricingPlan[] = [
     description: "Para jogadores profissionais",
     maxGamesPerDay: 10,
     features: [
-      { name: "Geração de 10 jogos por dia", included: true }, // Updated to 10 games
+      { name: "Geração de 10 jogos por dia", included: true },
       { name: "Acesso aos últimos resultados", included: true },
       { name: "Estratégias básicas", included: true },
-      { name: "Geração ilimitada de jogos", included: false }, // Changed to false
+      { name: "Geração ilimitada de jogos", included: false },
       { name: "Estratégias avançadas", included: true },
       { name: "Estatísticas detalhadas", included: true },
     ],

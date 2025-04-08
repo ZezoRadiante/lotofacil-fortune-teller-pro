@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +31,7 @@ const Dashboard = () => {
   const [selectedTab, setSelectedTab] = useState("generator");
   const [selectedNumbers, setSelectedNumbers] = useState<number[]>([]);
   const [activeStrategies, setActiveStrategies] = useState<string[]>([]);
-  const [gameQuantity, setGameQuantity] = useState<number>(5);
+  const [gameQuantity, setGameQuantity] = useState<number>(1); // Começa com o valor mínimo
   const [generatedGames, setGeneratedGames] = useState<number[][]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   
@@ -38,16 +39,20 @@ const Dashboard = () => {
   
   const isSubscribed = userRole === 'premium' || userRole === 'admin';
   
+  // Função que determina o número máximo de jogos por dia com base no plano do usuário
   const getMaxGamesPerDay = (): number => {
     if (userRole === 'admin') {
-      return 15;
+      return 15; // Usuários admin têm um limite maior para testes
     } else if (userRole === 'premium') {
+      // Verifica se o usuário tem plano premium
       const ultimatePlan = pricingPlans.find(plan => plan.id === 'ultimate');
       return ultimatePlan?.maxGamesPerDay || 10;
     } else if (isSubscribed) {
+      // Outros usuários assinantes (plano pro)
       const proPlan = pricingPlans.find(plan => plan.id === 'pro');
       return proPlan?.maxGamesPerDay || 5;
     } else {
+      // Usuários gratuitos
       const freePlan = pricingPlans.find(plan => plan.id === 'free');
       return freePlan?.maxGamesPerDay || 1;
     }
@@ -56,8 +61,9 @@ const Dashboard = () => {
   const maxGames = getMaxGamesPerDay();
   const maxSelectedNumbers = isSubscribed ? 10 : 3;
 
+  // Atualiza o gameQuantity quando o maxGames muda ou é inicializado
   useEffect(() => {
-    if (!isSubscribed && gameQuantity > maxGames) {
+    if (gameQuantity > maxGames) {
       setGameQuantity(maxGames);
     }
   }, [isSubscribed, gameQuantity, maxGames]);
