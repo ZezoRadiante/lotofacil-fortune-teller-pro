@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +23,7 @@ import {
 } from "@/services/lotofacil";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { pricingPlans } from "@/data/pricing";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -34,24 +34,34 @@ const Dashboard = () => {
   const [generatedGames, setGeneratedGames] = useState<number[][]>([]);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   
-  // Use auth context to get user role
   const { userRole } = useAuth();
   
-  // Check if user is premium or admin (subscribed)
   const isSubscribed = userRole === 'premium' || userRole === 'admin';
   
-  // Game limit based on subscription
-  const maxGames = isSubscribed ? 15 : 1;
+  const getMaxGamesPerDay = (): number => {
+    if (userRole === 'admin') {
+      return 15;
+    } else if (userRole === 'premium') {
+      const ultimatePlan = pricingPlans.find(plan => plan.id === 'ultimate');
+      return ultimatePlan?.maxGamesPerDay || 10;
+    } else if (isSubscribed) {
+      const proPlan = pricingPlans.find(plan => plan.id === 'pro');
+      return proPlan?.maxGamesPerDay || 5;
+    } else {
+      const freePlan = pricingPlans.find(plan => plan.id === 'free');
+      return freePlan?.maxGamesPerDay || 1;
+    }
+  };
+  
+  const maxGames = getMaxGamesPerDay();
   const maxSelectedNumbers = isSubscribed ? 10 : 3;
 
-  // Adjust game quantity if needed when subscription status changes
   useEffect(() => {
     if (!isSubscribed && gameQuantity > maxGames) {
       setGameQuantity(maxGames);
     }
   }, [isSubscribed, gameQuantity, maxGames]);
 
-  // Inicializar o banco de dados quando o componente montar
   useEffect(() => {
     initializeDatabase()
       .then(success => {
@@ -64,7 +74,6 @@ const Dashboard = () => {
       });
   }, []);
 
-  // Queries para buscar os dados
   const { 
     data: results = [], 
     isLoading: isLoadingResults 
@@ -109,7 +118,6 @@ const Dashboard = () => {
     if (activeStrategies.includes(strategyId)) {
       setActiveStrategies(activeStrategies.filter((id) => id !== strategyId));
     } else {
-      // Check if strategy is premium and user is not subscribed
       const strategy = strategies.find(s => s.id === strategyId);
       if (strategy?.premium && !isSubscribed) {
         toast({
@@ -124,24 +132,18 @@ const Dashboard = () => {
   };
 
   const handleGenerateGames = () => {
-    // Check if user has reached daily limit for free plan
-    if (!isSubscribed) {
-      // In a real app, you'd check against a database record of today's generations
-      // For now, we'll just show a toast and allow one game
-      if (gameQuantity > maxGames) {
-        toast({
-          title: "Limite do plano gratuito",
-          description: "Você pode gerar apenas 1 jogo por dia no plano gratuito. Faça upgrade para gerar mais jogos.",
-          variant: "destructive",
-        });
-        setGameQuantity(maxGames);
-        return;
-      }
+    if (gameQuantity > maxGames) {
+      toast({
+        title: "Limite do plano",
+        description: `Você pode gerar apenas ${maxGames} ${maxGames === 1 ? 'jogo' : 'jogos'} por dia no seu plano atual. Faça upgrade para gerar mais jogos.`,
+        variant: "destructive",
+      });
+      setGameQuantity(maxGames);
+      return;
     }
     
     setIsGenerating(true);
     
-    // Simulate server processing
     setTimeout(() => {
       try {
         const options = {
@@ -158,7 +160,6 @@ const Dashboard = () => {
         
         const games = generateGames(options);
         
-        // Include fixed numbers if selected
         if (selectedNumbers.length > 0) {
           for (let i = 0; i < games.length; i++) {
             games[i] = [...selectedNumbers, ...games[i].filter(n => !selectedNumbers.includes(n))].slice(0, games[i].length);
@@ -199,7 +200,9 @@ const Dashboard = () => {
               </p>
             </div>
             <Badge className="bg-lotofacil-gradient">
-              {isSubscribed ? "Plano Premium" : "Plano Básico"}
+              {userRole === 'premium' ? "Plano Fortune" : 
+               userRole === 'admin' ? "Plano Admin" : 
+               isSubscribed ? "Plano Pro Fortune" : "Plano Básico"}
             </Badge>
           </div>
           
@@ -249,8 +252,7 @@ const Dashboard = () => {
                     <CardHeader>
                       <CardTitle>Quantidade de Jogos</CardTitle>
                       <CardDescription>
-                        Escolha quantos jogos deseja gerar (máximo: {maxGames})
-                        {!isSubscribed && ' no plano gratuito'}
+                        Escolha quantos jogos deseja gerar (máximo: {maxGames} {maxGames === 1 ? 'jogo' : 'jogos'} por dia no seu plano)
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -287,7 +289,11 @@ const Dashboard = () => {
                         <ul className="space-y-2 mb-4">
                           <li className="flex items-center gap-2">
                             <span className="text-lotofacil-purple font-bold">•</span>
-                            <span>Geração ilimitada de jogos</span>
+                            <span>Até 5 jogos por dia no Plano Fortune</span>
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <span className="text-lotofacil-purple font-bold">•</span>
+                            <span>Até 10 jogos por dia no Plano Pro Fortune</span>
                           </li>
                           <li className="flex items-center gap-2">
                             <span className="text-lotofacil-purple font-bold">•</span>
@@ -457,7 +463,6 @@ const Dashboard = () => {
         </div>
       </main>
       
-      {/* Footer */}
       <footer className="bg-gray-800 text-white py-8">
         <div className="container mx-auto px-4 text-center">
           <p>&copy; {new Date().getFullYear()} Lotofácil Fortune. Todos os direitos reservados.</p>

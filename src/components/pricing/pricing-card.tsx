@@ -18,6 +18,7 @@ interface PricingPlan {
   description: string;
   features: PricingFeature[];
   popular?: boolean;
+  maxGamesPerDay?: number;
 }
 
 interface PricingCardProps {
@@ -39,6 +40,11 @@ const PricingCard = ({ plan }: PricingCardProps) => {
           <span className="text-3xl font-bold">{formatCurrency(plan.price)}</span>
           <span className="text-muted-foreground">/{plan.period === "month" ? "mês" : "ano"}</span>
         </div>
+        {plan.maxGamesPerDay && (
+          <div className="mt-1 text-sm font-medium text-lotofacil-purple">
+            {plan.maxGamesPerDay} {plan.maxGamesPerDay === 1 ? 'jogo' : 'jogos'} por dia
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <ul className="space-y-2">

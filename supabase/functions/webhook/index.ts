@@ -61,8 +61,9 @@ serve(async (req) => {
         const planId = session.metadata?.plan_id;
         
         if (userId && planId) {
-          // Update user role based on plan
-          const role = planId === "pro" || planId === "ultimate" ? "premium" : "user";
+          // Always set role to premium regardless of plan ID
+          // Both pro and ultimate plans are considered premium
+          const role = "premium";
           
           // Delete any existing role entry for this user
           await supabaseClient
@@ -73,9 +74,14 @@ serve(async (req) => {
           // Insert new role
           await supabaseClient
             .from("user_roles")
-            .insert({ user_id: userId, role });
+            .insert({ 
+              user_id: userId, 
+              role,
+              // Store the plan ID as additional metadata for reference
+              meta: { plan_id: planId }
+            });
           
-          console.log(`Updated user ${userId} to role ${role}`);
+          console.log(`Updated user ${userId} to role ${role} with plan ${planId}`);
         }
         break;
       }
