@@ -34,7 +34,11 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/subscribe" element={<Subscribe />} />
+            <Route path="/subscribe" element={
+              <ProtectedRoute>
+                <Subscribe />
+              </ProtectedRoute>
+            } />
             <Route path="/payment-success" element={
               <ProtectedRoute>
                 <PaymentSuccess />

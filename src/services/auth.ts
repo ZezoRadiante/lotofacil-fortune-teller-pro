@@ -72,8 +72,11 @@ export const setupAuthListener = (
   setUser: (user: User | null) => void,
   setSession: (session: Session | null) => void
 ) => {
+  console.log("Setting up auth state listener");
+  
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (event, session) => {
+      console.log("Auth state changed:", event);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -87,12 +90,14 @@ export const setupAuthListener = (
 
   // Verificar se já existe uma sessão ativa
   supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log("Initial session check:", session ? "Session exists" : "No session");
     setSession(session);
     setUser(session?.user ?? null);
   });
 
   // Retornar função para cancelar a inscrição quando o componente for desmontado
   return () => {
+    console.log("Cleaning up auth listener");
     subscription.unsubscribe();
   };
 };

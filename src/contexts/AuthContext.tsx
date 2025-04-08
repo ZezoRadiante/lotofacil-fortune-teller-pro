@@ -68,8 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    console.log("Setting up auth listener");
     const cleanup = setupAuthListener(setUser, setSession);
-    setIsLoading(false);
+    
+    // Initial auth check needs to happen after the listener is set up
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
     
     return cleanup;
   }, []);
@@ -77,8 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Verificar o papel do usuário sempre que o usuário mudar
   useEffect(() => {
     if (user) {
+      console.log("User authenticated, checking role", user.email);
       checkUserRole();
     } else {
+      console.log("No authenticated user");
       setUserRole(null);
     }
   }, [user]);
